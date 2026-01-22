@@ -1,4 +1,4 @@
-name: Build and deploy Node.js app to Azure Web App - todox-webapp
+name: Build and deploy Node.js backend to Azure Web App - BTodo
 
 on:
   push:
@@ -11,47 +11,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # ===== CHECKOUT =====
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # ===== SETUP NODE =====
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
 
-    
-      # ===== BACKEND =====
-      - name: Install backend
-        run: npm install --prefix backend
-
-      # ===== PREPARE DEPLOY PACKAGE =====
-      - name: Prepare deploy folder
+      # ===== DEBUG (OPTIONAL NHƯNG NÊN GIỮ) =====
+      - name: Debug folder
         run: |
-          mkdir deploy
-          cp -r backend/* deploy/
-          mkdir -p deploy/frontend
-          cp -r frontend/dist deploy/frontend/dist
+          pwd
+          ls -la
+          cat package.json
 
+      # ===== INSTALL DEPENDENCIES =====
+      - name: Install dependencies
+        run: npm install
+
+      # ===== UPLOAD ARTIFACT =====
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
-          path: deploy
+          name: node-backend
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
+      # ===== DOWNLOAD ARTIFACT =====
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: node-backend
           path: .
 
+      # ===== DEPLOY =====
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: todox-webapp
+          app-name: BTodo
           slot-name: Production
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BBCDBB813DC74D77B65FBFCBA76D353D }}
           package: .
